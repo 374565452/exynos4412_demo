@@ -1,4 +1,4 @@
-/*该驱动针对已知总线编号的，总线上的多个设备*/
+﻿/*该驱动针对已知总线编号的，总线上的多个设备*/
 #include <linux/i2c.h>
 #include <linux/list.h> 
 #include <linux/delay.h>
@@ -78,9 +78,9 @@ extern struct list_head	__i2c_board_list;  //i2c内核设备链表，通过该�
 #define _P_SIZE 	64  //设备数据缓冲区大小，供dev_data使用,read和write的count不能超过这个值
 ///ARRAY_SIZE(x) (sizeof(x) / sizeof(*(x)))   //数组元素个数  在某个头文件里面有
 
-#define CHAR_DRIVER_NAME "i2c_7_driver"
-#define CLASS_NAME "i2c_7_class"
-#define DEV_NAME "i2c_7_dev"   //设备节点名称 
+#define CHAR_DRIVER_NAME "si4705_driver"
+#define CLASS_NAME "si4705_class"
+#define DEV_NAME "si4705"   //设备节点名称 
 #define BUS_NUM  7  //挂载i2c设备的总线编号，看芯片手册
 
 int DEV_NUM = 0; 	  //设备数量

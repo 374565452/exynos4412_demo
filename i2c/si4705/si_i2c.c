@@ -96,7 +96,10 @@ int DEV_NUM = 0; 	  //设备数量
 int major = MAJOR_NUM;
 int minor_begin = MINOR_NUM;
 
-
+MODULE_AUTHOR("KQZ");
+MODULE_DESCRIPTION("driver framework");
+MODULE_LICENSE("Dual BSD/GPL");
+MODULE_VERSION("V1.0");
 
 static const struct i2c_device_id i2c_dev_id[] = {
 	{ DEV_NAME,0},//用到哪些就声明哪些内容，比如driver_data用不到，所以这里就写0,这里的DEV_NAME要和注册的设备相同
@@ -318,6 +321,7 @@ struct i2c_driver i2c_dev_driver = {
 
 static int i2c_probe(struct i2c_client *client, const struct i2c_device_id *device_id)
 {
+printk(KERN_EMERG "i2c_probe is called!\n");
 	int ret = -1,i = 0;
 	int j = 0;
 	int num_of_dev = 0/*设备的数量*/;
@@ -480,7 +484,3 @@ static void __exit i2c_exit(void)
 module_init(i2c_init);
 module_exit(i2c_exit);
 //module_i2c_driver(i2c_dev_driver);
-MODULE_AUTHOR("KQZ");
-MODULE_DESCRIPTION("driver framework");
-MODULE_LICENSE("Dual BSD/GPL");
-MODULE_VERSION("V1.0");

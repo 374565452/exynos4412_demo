@@ -1,5 +1,5 @@
 #!/bin/bash
-obj-m += si_i2c.o
+obj-m += si_i2c2.o
 
 KDIR := /home/linux_source/iTop4412_Kernel_3.0
 
