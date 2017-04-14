@@ -1,5 +1,6 @@
 /**
- * 
+ * libmad库文件所在目录为：/usr/local/libmad/lib/
+ * alsa库文件所在目录为:/usr/local/arm-alsa/lib/
  * 在进行此文件进行编译时，一直找不到 -lmad -lasound库文件，因为-L /usr/local/arm-alsa/lib 如果指定上这个目录，则会出现 mad库找不到
  * 情况，同理如果只是加上 /usr/local/libmad/lib，则会出现 asound库找不到现象，两个路径不能同进设置。
  * 为了解决以上问题，将Libmad编译完成的库文件一起拷贝到arm-alsa/lib文件夹下。
@@ -37,11 +38,24 @@ void init_mixer()
 	snd_mixer_attach(mixer, "default");
 	snd_mixer_selem_register(mixer, NULL, NULL);
 	snd_mixer_load(mixer);
+	//此处不能如此简单的遍历得到snd_mixer_elem_t 指针对象
 	//找到Pcm对应的element,方法比较笨拙
 	pcm_element = snd_mixer_first_elem(mixer);
-	pcm_element = snd_mixer_elem_next(pcm_element);
-	pcm_element = snd_mixer_elem_next(pcm_element);
-	//
+	//pcm_element = snd_mixer_elem_next(pcm_element);
+	//pcm_element = snd_mixer_elem_next(pcm_element);
+	while(pcm_element){
+		//strstr 判断给定的字符串是否在src字符串中出现过
+		//strcmp 判断两个字符串是否相等
+		if(snd_mixer_selem_is_active(pcm_element) && !strcmp(snd_mixer_selem_get_name(pcm_element),"Headphone")){
+			printf("the pcm_element name is %s \r\n",snd_mixer_selem_get_name(pcm_element));
+			//printf("the pcm_element index is %d \r\n",snd_mixer_selem_get_index (pcm_element));
+			printf("the pcm_element enum items is %d \r\n",snd_mixer_selem_get_enum_items(pcm_element));
+			break;
+		}else
+		{
+			pcm_element=snd_mixer_elem_next(pcm_element);
+		}
+	}
 	long int a, b;
 	long alsa_min_vol, alsa_max_vol;
 	///处理alsa1.0之前的bug，之后的可略去该部分代码
@@ -49,6 +63,8 @@ void init_mixer()
 	SND_MIXER_SCHN_FRONT_LEFT, &a);
 	snd_mixer_selem_get_playback_volume(pcm_element,
 	SND_MIXER_SCHN_FRONT_RIGHT, &b);
+
+printf("the a is %d ,the b is %d -----------\r\n",a,b);
 
 	snd_mixer_selem_get_playback_volume_range(pcm_element,
 	&alsa_min_vol,
@@ -60,6 +76,7 @@ void init_mixer()
 
 void write_vol(int vol)
 {
+	//snd_mixer_selem_set_playback_volume_all(pcm_element,vol);
 	//左音量
 	snd_mixer_selem_set_playback_volume(pcm_element,SND_MIXER_SCHN_FRONT_LEFT,vol);
 	//右音量
@@ -83,7 +100,8 @@ int main(int argc, char *argv[])
   struct stat stat;
   void *fdm;
 
-  if (argc != 2)
+  //if (argc != 2)
+  	if(argc < 2)
     {
     printf("Usage: minimad + mp3 file name");
     return 1;
@@ -122,9 +140,10 @@ int main(int argc, char *argv[])
     	vol =atoi(argv[2]);
     	printf("the vol is %d \r\n",vol);
     }
-    write_vol(34);
+    write_vol(vol);
     cur_vol=read_vol();
     printf("the after config vol is %d \r\n",cur_vol);
+    
   decode(fdm, stat.st_size);
 
   if (munmap(fdm, stat.st_size) == -1)

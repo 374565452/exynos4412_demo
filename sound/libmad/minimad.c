@@ -18,6 +18,10 @@
  *
  * $Id: minimad.c,v 1.4 2004/01/23 09:41:32 rob Exp $
  */
+/*
+  * 此代码编译的完整命令为：arm-none-linux-genueabi-gcc -o minimad minimad.c -lmad -L /usr/local/libmad/lib/ -static
+  * 
+ */
 
 # include <stdio.h>
 # include <unistd.h>
