@@ -4,7 +4,9 @@
 #include <string.h>
 #include <alsa/asoundlib.h>
  
- 
+ /**
+  * 此程序可以使用-------------用来测试alsa pcm
+  */
  
  
 struct WAV_HEADER

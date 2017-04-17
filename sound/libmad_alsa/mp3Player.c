@@ -381,6 +381,7 @@ static int decode(unsigned char const *start, unsigned long length)
            input, 0 /* header */, 0 /* filter */, output,
            error, 0 /* message */);
 
+  //mad_decoder_options(&decoder, 0);
   /* start decoding */
 
   result = mad_decoder_run(&decoder, MAD_DECODER_MODE_SYNC);
