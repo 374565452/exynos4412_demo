@@ -4,18 +4,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CYCLE_BUFFER_SIZE 8192
+#define CYCLE_BUFFER_SIZE 16*1024
 
 typedef union{
 	struct{
-		unsigned index	:13; //最大为8192 2^3*2^10 数据
+		unsigned index	:14; //最大为8192 2^3*2^10 数据
 	}bit;
 	unsigned int max;
 }cycle_t;
 
 typedef struct cycle_buffer{
 
-	void * data;
+	unsigned char * data;
 	unsigned int length;
 	cycle_t wx; //向缓冲区中写数据指针
 	cycle_t rx; //从缓冲区中读数据指针
@@ -27,11 +27,11 @@ typedef struct cycle_buffer{
  * @param data [实际存放数据的位置]
  * @param len  [数据长度]
  */
-void init_cycle_buffer(c_buffer * buf,void * data,unsigned int len); 
+void init_cycle_buffer(c_buffer * buf,unsigned char * data,unsigned int len); 
 
-int put_cycle(c_buffer * buf,void *data,int len);
+int put_cycle(c_buffer * buf,unsigned char *data,int len);
 
-int get_cycle(c_buffer * buf,void * data,int len);
+int get_cycle(c_buffer * buf,unsigned char * data,int len);
 
 int get_data_size(c_buffer *buf);
 

@@ -24,7 +24,7 @@ int get_extra_capacity(c_buffer * buf)
 	return (buf->length - data_len);
 }
 
-void init_cycle_buffer(c_buffer * buf,void * data,unsigned int len)
+void init_cycle_buffer(c_buffer * buf,unsigned char * data,unsigned int len)
 {
 	buf->data=data;
 	buf->length=len;
@@ -36,7 +36,7 @@ void init_cycle_buffer(c_buffer * buf,void * data,unsigned int len)
  * 向循环缓冲区中写入指定长度的数据，如果要写入的数据长度比缓冲区剩余的空间大，则返回为-1
  * 否则返回实际写入的数据长度
  */
-int put_cycle(c_buffer * buf,void *data,int len)
+int put_cycle(c_buffer * buf,unsigned char *data,int len)
 {
 	int i =0 ;
 	int extra_capacity=get_extra_capacity(buf);
@@ -58,7 +58,7 @@ int put_cycle(c_buffer * buf,void *data,int len)
 /**
  * 返回实际读取到的数据长度
  */
-int get_cycle(c_buffer * buf,void * data,int len)
+int get_cycle(c_buffer * buf,unsigned char * data,int len)
 {
 	int i =0;
 	int cur_data_size=get_data_size(buf);

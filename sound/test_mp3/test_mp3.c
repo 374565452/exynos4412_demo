@@ -1,10 +1,18 @@
-#include "alsa_pcm.h"
+#include "test_mp3.h"
+
 snd_pcm_t * handle=NULL;        //PCI设备句柄
 snd_pcm_hw_params_t* params=NULL;//硬件信息和PCM流配置
 
 
 snd_mixer_t * mixer;
 snd_mixer_elem_t *pcm_element;
+
+int main(int argc, char * argv[])
+{
+	set_pcm();
+	init_mixer();
+	return 0;
+}
 
 int set_pcm()
 {
@@ -71,7 +79,6 @@ void write_pcm(unsigned char * data,unsigned int len)
 {
 	if(handle)
 	{
-		printf("------------------------write_pcm------------------------------\r\n");
 		snd_pcm_writei (handle, data, len);  
 	}
 }

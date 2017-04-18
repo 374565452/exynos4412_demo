@@ -12,10 +12,10 @@
 #include "mp3_audio.h"
 #include "alsa_pcm.h"
 
-#define DECODER_LEN 1024;
+#define DECODER_LEN 8192
 int decode(c_buffer * mp3);
 
-void close_decode();
+void close_decode(); 
 
 void player_run();
 

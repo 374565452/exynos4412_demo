@@ -1,13 +1,15 @@
 #include "mp3_player.h"
 
 struct mad_decoder decoder;
-int result;
+int result = -1 ;
 unsigned char mp3_decoder[DECODER_LEN];
 
 static enum mad_flow input(void *data,struct mad_stream *stream);
 static inline signed int scale(mad_fixed_t sample);
 static enum mad_flow output(void *data, struct mad_header const *header,struct mad_pcm *pcm);
 static enum mad_flow error(void *data,struct mad_stream *stream,struct mad_frame *frame);
+
+
 
 int decode(c_buffer * mp3)
 {
@@ -23,28 +25,39 @@ void close_decode()
 
 void player_run()
 {
-	result = mad_decoder_run(&decoder, MAD_DECODER_MODE_SYNC);
-	printf("the result is %d -------\r\n",result );
+ 
+  if(result <0)
+  {
+     //printf("-accccccccccccccccccccccccccccccccccccccccccccccccccccccc----------\r\n");
+    result = mad_decoder_run(&decoder, MAD_DECODER_MODE_SYNC);
+    printf("---------------the result is %d -------\r\n",result );
+  }
+	
 }
 
 
 static enum mad_flow input(void *data,struct mad_stream *stream)
 {
-	int unproc_data_size; /*the unprocessed data's size*/
+	//int unproc_data_size; /*the unprocessed data's size*/
     int copy_size;
     int ret_code;
     c_buffer * p =data;
     int has=get_data_size(p);
-    if( !has)
+    //printf("--------------------------ccccccccccccccccccc----------\r\n");
+    if(has)
     {
     	memset(mp3_decoder,0,DECODER_LEN);
     	copy_size=read_audio_data(mp3_decoder,DECODER_LEN);
+      int unproc_data_size = stream->bufend - stream->next_frame;
+    printf("the copy_size is %d -------the decoder len is %d ------------%d------------------\r\n",copy_size,DECODER_LEN,unproc_data_size);
     	mad_stream_buffer(stream, mp3_decoder,copy_size);
-		ret_code = MAD_FLOW_CONTINUE;
-    }else
-    {
-		ret_code = MAD_FLOW_STOP;
+		  ret_code = MAD_FLOW_CONTINUE;
     }
+    else
+    {
+		  ret_code = MAD_FLOW_STOP;
+    }
+
     return ret_code;
 }
 
@@ -71,7 +84,7 @@ static enum mad_flow output(void *data, struct mad_header const *header,struct m
   left_ch   = pcm->samples[0];
   right_ch  = pcm->samples[1];
   
-  unsigned char Output[6912], *OutputPtr;  
+  unsigned char Output[8196], *OutputPtr;  
   int fmt, wrote, speed, exact_rate, err, dir; 
   OutputPtr = Output;  
    while (nsamples--) 
@@ -95,6 +108,7 @@ static enum mad_flow output(void *data, struct mad_header const *header,struct m
  	OutputPtr = Output;  
 
  	//snd_pcm_writei (handle, OutputPtr, n);  
+  //printf("------------write the data to the pcm device -----------------\r\n");
  	write_pcm(OutputPtr,n);
  	OutputPtr = Output;     
 
@@ -105,10 +119,10 @@ static enum mad_flow error(void *data,struct mad_stream *stream,struct mad_frame
 {
   //struct buffer *buffer = data;
   //printf("this is mad_flow error\n");
-  //fprintf(stderr, "decoding error 0x%04x (%s) at byte offset %u\n",
-    //  stream->error, mad_stream_errorstr(stream),
-     // stream->this_frame - buffer->start);
-
+  //fprintf(stderr, "decoding error 0x%04x (%s) at byte offset\n",
+    //  stream->error, mad_stream_errorstr(stream));
+      //stream->this_frame - buffer->start);
+  printf("------------error-----------------\r\n");
   /* return MAD_FLOW_BREAK here to stop decoding (and propagate an error) */
 
   return MAD_FLOW_CONTINUE;

@@ -6,7 +6,6 @@
 
 #include <string.h>
 #include <alsa/asoundlib.h>
-
 int set_pcm();
 
 void write_pcm(unsigned char * data,unsigned int len);

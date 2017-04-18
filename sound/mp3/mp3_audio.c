@@ -1,5 +1,7 @@
 #include "mp3_audio.h"
 
+c_buffer mp3_buf;
+
 unsigned char mp3_data[CYCLE_BUFFER_SIZE] ;
 
 void init_mp3_audio()
