@@ -177,6 +177,9 @@ static void close_thread(void)
     {
         pthread_join(player_thread,NULL);
     }
+    //关闭信号量
+    sem_destroy(&empty_sem);
+    sem_destroy(&full_sem);
 }
 
 int pre_copy_size=0;
