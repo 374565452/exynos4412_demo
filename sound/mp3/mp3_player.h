@@ -13,7 +13,7 @@
 #include "alsa_pcm.h"
 
 #define DECODER_LEN 8192
-int decode(c_buffer * mp3);
+int decode(mp3_dec * mp3);
 
 void close_decode(); 
 

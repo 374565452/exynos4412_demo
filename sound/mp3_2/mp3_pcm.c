@@ -1,4 +1,4 @@
-#include "alsa_pcm.h"
+#include "mp3_pcm.h"
 snd_pcm_t * handle=NULL;        //PCI设备句柄
 snd_pcm_hw_params_t* params=NULL;//硬件信息和PCM流配置
 

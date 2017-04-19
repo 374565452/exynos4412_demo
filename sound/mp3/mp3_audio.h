@@ -11,13 +11,23 @@
 #include <unistd.h>
 
 #include "cycle_buffer.h"
+#include "mad.h"
 
-extern c_buffer mp3_buf;
+typedef enum mad_flow(*mp3_stream)(struct mad_stream *);
+typedef struct mp3_t
+{
+	c_buffer * buf;
+	enum mad_flow (*decoder)(struct mad_stream *stream);
+}mp3_dec;
 
-void init_mp3_audio();
+extern mp3_dec mp3_d;
+
+void init_mp3_audio(mp3_stream fun);
 
 int write_audio_data(unsigned char * data,int len);
 
 int read_audio_data(unsigned char * data,int len);
+
+int get_mp3_audio_len();
 
 #endif
