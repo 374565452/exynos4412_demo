@@ -1,0 +1,1 @@
+INSTALL(FILES hello.txt DESTINATION share/doc/cmake/t2)

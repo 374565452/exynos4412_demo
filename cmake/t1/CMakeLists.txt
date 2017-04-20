@@ -1,0 +1,7 @@
+PROJECT (HELLO) 
+SET(SRC_LIST main.c)
+SET(CMAKE_SYSTEM_NAME Linux) #设置系统名称
+SET(CMAKE_C_COMPILER "arm-none-linux-gnueabi-gcc") #设置编译器名称或绝对路径
+MESSAGE(STATUS "This is BINARY dir " ${HELLO_BINARY_DIR})
+MESSAGE(STATUS "This is SOURCE dir "${HELLO_SOURCE_DIR})
+ADD_EXECUTABLE(hello ${SRC_LIST})

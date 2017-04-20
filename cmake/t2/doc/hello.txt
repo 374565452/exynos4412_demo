@@ -1,0 +1,9 @@
+真实工程项目：
+1，为工程添加一个子目录src，用来放置工程源代码;
+2，添加一个子目录doc，用来放置这个工程的文档hello.txt
+3，在工程目录添加文本文件COPYRIGHT, README；
+4，在工程目录添加一个runhello.sh脚本，用来调用hello二进制
+4，将构建后的目标文件放入构建目录的bin子目录；
+5，最终安装这些文件：将hello二进制与runhello.sh安装至//bin，将doc目录中的hello.txt以及COPYRIGHT/README安装到//share/doc/cmake/t2，
+
+如果想要指定最后可执行程序的安装目录，可以在cmake执行命令时加入-DCMAKE_INSTALL_PREFIX来指定最后安装在哪个位置上
