@@ -9,11 +9,13 @@ SET(TARGET_BIN net-Broadcast)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/net 
 					${PROJECT_SOURCE_DIR}/src/common 
 					${PROJECT_SOURCE_DIR}/src/audio 
+					${PROJECT_SOURCE_DIR}/src/protocol
 					/usr/local/arm-alsa/include)  
 
 ADD_SUBDIRECTORY(net)
 ADD_SUBDIRECTORY(common)
 ADD_SUBDIRECTORY(audio)
+ADD_SUBDIRECTORY(protocol)
 
 #添加alsa 与 mad 库
 LINK_DIRECTORIES(/usr/local/arm-alsa/lib)

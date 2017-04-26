@@ -87,6 +87,76 @@ int player_audio(int argc, char * argv[])
     //free(mp3fp);
     return 0;
 }
+void close_audio()
+{
+    if(player_thread != 0)
+    {
+        pthread_join(player_thread,NULL);
+    }
+
+    if(read_file_thread != 0 )
+    {
+        pthread_join(read_file_thread,NULL);
+    }
+
+    close_decode();
+
+    close_pcm();
+    //关闭信号量
+    sem_destroy(&empty_sem);
+    sem_destroy(&full_sem);
+}
+void init_audio()
+{
+    init_mad(mp3_stream_decoder);
+    if(set_pcm()!=0)                 //设置pcm 参数
+    {
+        printf("set_pcm fialed:\n");
+        //return 1;   
+    }
+    init_mixer(); //初始化音量控制
+}
+
+void write_audio_vol(int vol)
+{
+     write_vol(vol);
+}
+int read_audio_vol()
+{
+    int cur_vol=read_vol();
+    return cur_vol;
+}
+void audio_play(char * src)
+{
+
+    fp=fopen(src,"r"); //打开指定文件 
+
+    decode();
+    int f_state,p_state;
+
+    f_state=pthread_create(&read_file_thread,NULL,read_file_run,NULL);
+    if(f_state != 0 )
+    {
+        printf("create the read_file_thread is failed ----------\r\n");
+    }else
+    {
+        //printf("create the read_file_thread is success ----------\r\n");
+        read_thread_flag=1;
+    }
+
+    p_state=pthread_create(&player_thread,NULL,decoder_run,NULL);
+    if(p_state != 0 )
+    {
+        printf("create the player_thread is failed ----------\r\n");
+    }else
+    {
+        //printf("create the player_thread is success ----------\r\n");
+        play_thread_flag=1;
+    }
+    read_thread_flag=1;
+    sem_init(&empty_sem, 0, 0);
+    sem_init(&full_sem, 0, 0);
+}
 
 /**
  * 缺少向循环缓冲区添加数据，同时从循环缓冲区中读取数据
@@ -121,6 +191,7 @@ static void * decoder_run(void * arg)
     while(play_thread_flag)
     {
         player_run();//执行解码
+        printf("----------------------------------------------------------\r\n");
     }
     return arg;
 }
@@ -195,6 +266,7 @@ static enum mad_flow mp3_stream_decoder(struct mad_stream * stream)
     //printf("--------------------------ccccccccccccccccccc--the has is %d --------\r\n",has);
     if(!has)
     {
+        printf("----no data waiting the full sem ------------------\r\n");
         sem_wait(&full_sem); //如果没有数据，则进行等待full_sem信号
     }
     int unproc_data_size = stream->bufend - stream->next_frame;

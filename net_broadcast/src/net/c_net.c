@@ -1,4 +1,5 @@
 #include "c_net.h"
+#include "net_protocol.h"
 
 static void * recv_thread_func(void * pv);
 
@@ -19,8 +20,8 @@ unsigned char reconnect_thread_start=1;
 char * ip ;
 int port;
 
-#define RECV_BUF_SIZE 1024
-char recv_buf[RECV_BUF_SIZE];
+#define RECV_BUF_SIZE 1024*16
+unsigned char recv_buf[RECV_BUF_SIZE];
 //定义一个互斥锁
 pthread_mutex_t con_mut;
 pthread_t recv_thread;
@@ -176,6 +177,7 @@ static void * recv_thread_func(void * pv)
 		if(get_connected_state())
 		{
 			_debug("---------------net recv---------------------");
+			memset(recv_buf,0,RECV_BUF_SIZE);
 			recv_len = read(sockfd,recv_buf,RECV_BUF_SIZE);
 			//如里为0，表明已经读到文件的末尾，但在网络连接状态下为0表示，在这种状态下没有进行阻塞操作，直接返回
 			//表明网络连接状态出现问题
@@ -188,7 +190,15 @@ static void * recv_thread_func(void * pv)
 			}
 			else
 			{
-				_debug("recv : the len is %d , the data is %s ",recv_len,recv_buf);
+				//_debug("recv : the len is %d , the data is %s ",recv_len,recv_buf);
+				if( (recv_buf[0]== NET_PROTOCOL_HEADER) && (recv_len > NET_PROTOCOL_MIN_LEN )) //如果为消息头,长度够长
+				{
+					int data_len=(int)((int)(recv_buf[3]<<8)+(int)recv_buf[4]);
+					if((recv_len==(data_len+NET_PROTOCOL_MIN_LEN))&& (recv_buf[recv_len-1] == NET_PROTOCOL_TAIL))
+					{
+						process_protocol(recv_buf,recv_len); //进入到数据处理中
+					}
+				}
 			}
 		}
 	}

@@ -9,6 +9,9 @@
 
 int main(int argc, char * argv[])
 {
+	 if (argc !=2){
+	 	return 0;
+	 }
 	init_kill_signal();
 	init_c_net();
 	char buf[BUFSIZE];
@@ -20,7 +23,10 @@ int main(int argc, char * argv[])
 		//此处不能进行直接退出程序操作
 		//exit(0);
 	}
-	player_audio(argc,argv);
+	init_audio();
+	write_audio_vol(90);
+	audio_play(argv[1]);
+	//player_audio(argc,argv);
 	 while(fgets(buf, BUFSIZE, stdin) != NULL){
         /*通过sockfd给服务端发送数据*/
         net_send(buf, strlen(buf));
@@ -32,5 +38,6 @@ int main(int argc, char * argv[])
           //  write(STDOUT_FILENO, buf, n);
         //}
     }
+    close_audio();
 	return 0;	
 }
