@@ -131,25 +131,31 @@ printf("the alsa_min_vol is %d ,the alsa_max_vol is %d \r\n",alsa_min_vol,alsa_m
 }
 
 /**
- * 修改音量操作
+ * 修改音量操作 
+ * @2017-4-27 10：28分钟测试时，只有当alsa初始化完成的，才能够进行音量的设置
  */
 void write_vol(int vol)
 {
-	//snd_mixer_selem_set_playback_volume_all(pcm_element,vol);
-	//左音量
-	snd_mixer_selem_set_playback_volume(pcm_element,SND_MIXER_SCHN_FRONT_LEFT,vol);
-	//右音量
-	snd_mixer_selem_set_playback_volume(pcm_element,SND_MIXER_SCHN_FRONT_RIGHT,vol);
+	if(pcm_element)
+	{
+		//snd_mixer_selem_set_playback_volume_all(pcm_element,vol);
+		//左音量
+		snd_mixer_selem_set_playback_volume(pcm_element,SND_MIXER_SCHN_FRONT_LEFT,vol);
+		//右音量
+		snd_mixer_selem_set_playback_volume(pcm_element,SND_MIXER_SCHN_FRONT_RIGHT,vol);
+	}
 }
 
 int read_vol()
 {
 	long ll, lr;
-	//处理事件
-	snd_mixer_handle_events(mixer);
-	//左声道
-	snd_mixer_selem_get_playback_volume(pcm_element,SND_MIXER_SCHN_FRONT_LEFT, &ll);
-	//右声道
-	snd_mixer_selem_get_playback_volume(pcm_element,SND_MIXER_SCHN_FRONT_RIGHT, &lr);
+	if(pcm_element){
+		//处理事件
+		snd_mixer_handle_events(mixer);
+		//左声道
+		snd_mixer_selem_get_playback_volume(pcm_element,SND_MIXER_SCHN_FRONT_LEFT, &ll);
+		//右声道
+		snd_mixer_selem_get_playback_volume(pcm_element,SND_MIXER_SCHN_FRONT_RIGHT, &lr);
+	}
 	return (ll + lr) >> 1;
 }

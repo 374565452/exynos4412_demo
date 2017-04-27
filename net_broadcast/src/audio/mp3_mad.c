@@ -201,7 +201,7 @@ static enum mad_flow error(void *data,struct mad_stream *stream,struct mad_frame
   fprintf(stderr, "decoding error 0x%04x (%s) at byte offset\n",
      stream->error, mad_stream_errorstr(stream));
       //stream->this_frame - buffer->start);
-  printf("------------error-----------------\r\n");
+  //printf("------------error-----------------\r\n");
   /* return MAD_FLOW_BREAK here to stop decoding (and propagate an error) */
 
   return MAD_FLOW_CONTINUE;

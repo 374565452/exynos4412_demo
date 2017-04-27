@@ -89,10 +89,10 @@ int player_audio(int argc, char * argv[])
 }
 void close_audio()
 {
-    if(player_thread != 0)
+    /*if(player_thread != 0)
     {
         pthread_join(player_thread,NULL);
-    }
+    }*/
 
     if(read_file_thread != 0 )
     {
@@ -129,12 +129,13 @@ int read_audio_vol()
 void audio_play(char * src)
 {
 
-    fp=fopen(src,"r"); //打开指定文件 
+    //fp=fopen(src,"r"); //打开指定文件 
 
     decode();
-    int f_state,p_state;
+    int f_state ;
+    int p_state;
 
-    f_state=pthread_create(&read_file_thread,NULL,read_file_run,NULL);
+    /*f_state=pthread_create(&read_file_thread,NULL,read_file_run,NULL);
     if(f_state != 0 )
     {
         printf("create the read_file_thread is failed ----------\r\n");
@@ -142,7 +143,7 @@ void audio_play(char * src)
     {
         //printf("create the read_file_thread is success ----------\r\n");
         read_thread_flag=1;
-    }
+    }*/
 
     p_state=pthread_create(&player_thread,NULL,decoder_run,NULL);
     if(p_state != 0 )
@@ -253,6 +254,33 @@ static void close_thread(void)
     sem_destroy(&full_sem);
 }
 
+/**
+ * @2017-4-27 加入网络处理函数
+ */
+
+void set_net_audio_vol(int vol)
+{
+    write_audio_vol(vol);
+}
+
+int insert_net_audio_datas(void * data,int len)
+{
+    int extra_capacity=get_mp3_capacity();
+    if(extra_capacity<2*DECODER_BUF_SIZE)
+    {
+        sem_wait(&empty_sem);
+    }
+    if(len > 0){
+        //printf("write the mp3 data to the cycle buffer ----------------\r\n");
+         write_audio_data(data,len);
+    }
+    //int data_size=get_data_size(mp3_d.buf);
+    //int extra_capacity=get_extra_capacity(mp3_d.buf);
+    //printf("the mp3 buf extra capacity is %d the data size is %d ----\r\n", extra_capacity,data_size);
+    //sleep(1);
+    sem_post(&full_sem);
+}
+
 int pre_copy_size=0;
 static enum mad_flow mp3_stream_decoder(struct mad_stream * stream)
 {
@@ -286,7 +314,7 @@ static enum mad_flow mp3_stream_decoder(struct mad_stream * stream)
   //printf("the need_copy_size is %d ---the copy size is %d ---\r\n",need_copy_size,copy_size);
     copy_size=read_audio_data(mp3_decoder+unproc_data_size,copy_size);
     pre_copy_size=copy_size+unproc_data_size;
-  printf("the copy_size is %d ----------%d------pre copy size is %d ------------\r\n",copy_size,unproc_data_size,pre_copy_size);
+  //printf("the copy_size is %d ----------%d------pre copy size is %d ------------\r\n",copy_size,unproc_data_size,pre_copy_size);
     mad_stream_buffer(stream, mp3_decoder,(copy_size+unproc_data_size));
     ret_code = MAD_FLOW_CONTINUE;
 

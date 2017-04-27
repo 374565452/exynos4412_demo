@@ -53,27 +53,32 @@ int init_c_net(void)
 int net_start(char * server_ip,int server_port)
 {
 	int ret;
+	int error;
 	int reconect_state;
 	ip=server_ip;
 	port=server_port;
 	ret=connect_server();
-	if(ret < 0 )
+	if(ret < 0 ) //此处有bug，如果此客户端启动时，服务器端并没有启动，则不会创建重连线程，导致一直不会连接服务器
 	{
+		//@2017-4-27 修改此bug
 		//_debug("connect to the server is error ------");
-		return NET_CON_ERROR;
+		//return NET_CON_ERROR;
+		error=NET_CON_ERROR;
 	}
 	//放在这里进行重连操作，只有在程序运行，第一次结束掉连接服务器后才能进行重连操作
 	reconect_state=pthread_create(&reconnect_thread,NULL,reconnect_thread_func,NULL);
     if(reconect_state != 0)
     {
     	//_debug("the reconect thread create error ! the reconect_state is %d ",reconect_state);
-    	return NET_CREATE_RECON_THREAD_ERROR ;
+    	//return NET_CREATE_RECON_THREAD_ERROR ;
+    	error=NET_CREATE_RECON_THREAD_ERROR;
     }else
     {
 		//_debug("the reconect thread create success ! the reconect_state is %d ",reconect_state);
 		 reconnect_thread_start=1;
+		 //error=0;
     }
-	return 0;
+	return error;
 }
 static int connect_server()
 {
@@ -208,12 +213,13 @@ static void * reconnect_thread_func(void * pv)
 {
 	while(reconnect_thread_start)
 	{
+		_debug("----------ddddddddddd--reconnec to the server----------");
 		if(!get_connected_state())
 		{
 			_debug("------------reconnec to the server----------");
 			connect_server();
 		}
-		sleep(30);
+		sleep(3);
 	}
 }
 

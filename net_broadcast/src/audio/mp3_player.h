@@ -11,4 +11,12 @@ void audio_play(char * src);
 
 void close_audio();
 
+/**
+ * @2017-4-27 加入网络处理函数
+ */
+
+void set_net_audio_vol(int vol);
+
+int insert_net_audio_datas(void * data,int len);
+
 #endif
