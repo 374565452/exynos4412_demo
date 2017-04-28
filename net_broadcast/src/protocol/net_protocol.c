@@ -2,7 +2,7 @@
 #include "c_net.h"
 #include "mp3_player.h"
 
-static void net_update_vol(unsigned char * data,int len);
+//static void net_update_vol(unsigned char * data,int len);
 
 #define SEND_BUF_SIZE 1024
 unsigned char send_buf[SEND_BUF_SIZE];
@@ -11,7 +11,8 @@ static void pre_net_send(int command);
 
 protocol_action_t net_actions[PROTOCOL_ACTION_MAX]=
 {
-	{NET_UPDATE_VOL,net_update_vol},
+	{NET_UPDATE_VOL,set_net_audio_vol},
+	{NET_PLAY_MP3,insert_net_audio_datas},
 	{0,NULL}
 };
 
@@ -35,6 +36,7 @@ void process_protocol(unsigned char * recv,int len)
 			{
 				action_t.call_back(recv+5,data_len);
 			}
+			break;
 		}
 	}
 }
@@ -52,14 +54,14 @@ void protocol_send(int command,void * data,int len)
 	net_send(send_buf,len+NET_PROTOCOL_MIN_LEN);
 }
 
-void net_update_vol(unsigned char * data,int len)
+/*void net_update_vol(unsigned char * data,int len)
 {
 	printf("------the data len is %d --------\r\n",len);
 	int vol =(int)data[0];
 	write_audio_vol(vol);
 	unsigned char cur_vol=(unsigned char)read_audio_vol();
 	protocol_send(NET_UPDATE_VOL,&cur_vol,1);
-}
+}*/
 
 void pre_net_send(int command)
 {

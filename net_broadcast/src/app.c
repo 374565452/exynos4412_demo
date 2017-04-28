@@ -9,13 +9,21 @@
 
 int main(int argc, char * argv[])
 {
-	 if (argc !=2){
+	 /*if (argc !=2){
 	 	return 0;
-	 }
+	 }*/
 	init_kill_signal();
-	init_c_net();
+	
 	char buf[BUFSIZE];
 	int n ;
+	
+	init_audio();
+	write_audio_vol(90);
+	//audio_play(argv[1]);
+	net_play();
+	//等到音频驱动初始化完成后，再启动网络连接
+	init_c_net();
+
 	int con=net_start(SERVER_NAME,SERVER_PORT);
 	if(con <0)
 	{
@@ -23,9 +31,7 @@ int main(int argc, char * argv[])
 		//此处不能进行直接退出程序操作
 		//exit(0);
 	}
-	init_audio();
-	write_audio_vol(90);
-	audio_play(argv[1]);
+
 	//player_audio(argc,argv);
 	 while(fgets(buf, BUFSIZE, stdin) != NULL){
         /*通过sockfd给服务端发送数据*/

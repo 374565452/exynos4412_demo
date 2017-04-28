@@ -16,6 +16,9 @@
 #include <pthread.h>
 
 #include <semaphore.h> //信号量机制头文件
+
+#include "net_protocol.h"
+
 /*
 * This is perhaps the simplest example use of the MAD high-level API.
 * Standard input is mapped into memory via mmap(), then the high-level API
@@ -32,6 +35,8 @@ static void init_thread();
 static void * decoder_run(void * arg);
 static void * read_file_run(void * arg);
 static void close_thread(void);
+static void init_player(void);
+
 unsigned char read_thread_flag=0;
 unsigned char play_thread_flag=0;
 sem_t empty_sem; //数据空信号量
@@ -119,7 +124,8 @@ void init_audio()
 
 void write_audio_vol(int vol)
 {
-     write_vol(vol);
+    write_vol(vol);
+    
 }
 int read_audio_vol()
 {
@@ -130,7 +136,14 @@ void audio_play(char * src)
 {
 
     //fp=fopen(src,"r"); //打开指定文件 
-
+    
+}
+void net_play()
+{
+    init_player();
+}
+void init_player(void)
+{
     decode();
     int f_state ;
     int p_state;
@@ -158,7 +171,6 @@ void audio_play(char * src)
     sem_init(&empty_sem, 0, 0);
     sem_init(&full_sem, 0, 0);
 }
-
 /**
  * 缺少向循环缓冲区添加数据，同时从循环缓冲区中读取数据
  */
@@ -258,22 +270,31 @@ static void close_thread(void)
  * @2017-4-27 加入网络处理函数
  */
 
-void set_net_audio_vol(int vol)
+void set_net_audio_vol(unsigned char * data,int len)
 {
-    write_audio_vol(vol);
+    write_audio_vol((int)data[0]);
+    unsigned char cur_vol=(unsigned char)read_audio_vol();
+    protocol_send(NET_UPDATE_VOL,&cur_vol,1);
 }
 
-int insert_net_audio_datas(void * data,int len)
+void insert_net_audio_datas(unsigned char * data,int len)
 {
     int extra_capacity=get_mp3_capacity();
     if(extra_capacity<2*DECODER_BUF_SIZE)
     {
         sem_wait(&empty_sem);
     }
+    printf("insert to audio data to the cycle buffer ,the len is %d ----\r\n",len);
     if(len > 0){
         //printf("write the mp3 data to the cycle buffer ----------------\r\n");
          write_audio_data(data,len);
     }
+
+    unsigned char temp[2];
+    temp[0]= (len>>8 & 0xFF);
+    temp[1]=len &0xFF;
+    printf("the temp is %x,%x",temp[0],temp[1]);
+    protocol_send(NET_PLAY_MP3,temp,2);
     //int data_size=get_data_size(mp3_d.buf);
     //int extra_capacity=get_extra_capacity(mp3_d.buf);
     //printf("the mp3 buf extra capacity is %d the data size is %d ----\r\n", extra_capacity,data_size);

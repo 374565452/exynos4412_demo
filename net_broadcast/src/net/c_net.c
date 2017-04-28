@@ -181,7 +181,7 @@ static void * recv_thread_func(void * pv)
 	{
 		if(get_connected_state())
 		{
-			_debug("---------------net recv---------------------");
+			//_debug("---------------net recv---------------------");
 			memset(recv_buf,0,RECV_BUF_SIZE);
 			recv_len = read(sockfd,recv_buf,RECV_BUF_SIZE);
 			//如里为0，表明已经读到文件的末尾，但在网络连接状态下为0表示，在这种状态下没有进行阻塞操作，直接返回
@@ -195,7 +195,10 @@ static void * recv_thread_func(void * pv)
 			}
 			else
 			{
-				//_debug("recv : the len is %d , the data is %s ",recv_len,recv_buf);
+				//此处要做一个缓冲区，因为在测试播放mp3时，发送长数据会出现分包读取现象
+				//即一个包分为两次进行数据读写，出现拆包现象，所以要将读取到的数据添加到缓冲区内
+				//然后单独处理
+				_debug("recv : the len is %d , the data is %s ",recv_len,recv_buf);
 				if( (recv_buf[0]== NET_PROTOCOL_HEADER) && (recv_len > NET_PROTOCOL_MIN_LEN )) //如果为消息头,长度够长
 				{
 					int data_len=(int)((int)(recv_buf[3]<<8)+(int)recv_buf[4]);
@@ -213,7 +216,7 @@ static void * reconnect_thread_func(void * pv)
 {
 	while(reconnect_thread_start)
 	{
-		_debug("----------ddddddddddd--reconnec to the server----------");
+		//_debug("----------ddddddddddd--reconnec to the server----------");
 		if(!get_connected_state())
 		{
 			_debug("------------reconnec to the server----------");
