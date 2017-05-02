@@ -16,6 +16,8 @@
 #define NET_PLAY_MP3   0x1502 //播放mp3格式文件
 #define NET_PLAY_WAV   0x1503 //播放wav格式文件
 
+#define NET_PROTOCOL_PROCESS_MAX   3
+
 typedef struct
 {
 	int command;

@@ -1,5 +1,17 @@
 #include "c_net.h"
 #include "net_protocol.h"
+#include "cycle_buffer.h"
+
+/**
+ * @2017-5-2 增加循环缓冲区功能，将网络接收到的数据先放到缓冲区去
+ *           然后再通过由数据处理线程来完成数据的处理
+ */
+//c_buffer net_recv_buffer;
+net_data_t net_data;
+unsigned char net_recv_buf[CYCLE_BUFFER_SIZE];
+static void * process_protocol_thread_func(void * pv);
+//int cur_read_len=0;
+unsigned char process_count=0;
 
 static void * recv_thread_func(void * pv);
 
@@ -16,16 +28,35 @@ int sockfd;
 unsigned char connect_flag=0;
 unsigned char recv_thread_start=1;
 unsigned char reconnect_thread_start=1;
+unsigned char protocol_thread_start=1;
 
 char * ip ;
 int port;
 
 #define RECV_BUF_SIZE 1024*16
 unsigned char recv_buf[RECV_BUF_SIZE];
+
+unsigned char data_buf[RECV_BUF_SIZE];
+
 //定义一个互斥锁
 pthread_mutex_t con_mut;
 pthread_t recv_thread;
 pthread_t reconnect_thread;
+pthread_t protoocol_process_thread;
+//定义处理接收数据互斥锁
+pthread_mutex_t data_mut;
+
+void init_data_t(net_data_t * t)
+{
+	t->buffer_len_max=CYCLE_BUFFER_SIZE;
+	t->len=0;
+	t->data=net_recv_buf;
+}
+void put_data_to_t (unsigned char * data,int len)
+{
+	memcpy(net_data.data+net_data.len,data,len);
+	net_data.len += len;
+}
 
 int init_c_net(void)
 {
@@ -34,8 +65,19 @@ int init_c_net(void)
 	recv_thread=0;
 	reconnect_thread=0;
 
+	protoocol_process_thread=0;
+	//cur_read_len=0;
+	process_count=0;
+	pthread_mutex_init(&data_mut,NULL);
+	//init_cycle_buffer(&net_recv_buffer,net_recv_buf,CYCLE_BUFFER_SIZE);
+	init_data_t(&net_data);
+
+
 	/*用默认属性初始化互斥锁*/
     pthread_mutex_init(&con_mut,NULL);
+    //@2017-5-2 14：20 增加处理网络数据协议处理线程
+    pthread_create(&protoocol_process_thread,NULL,process_protocol_thread_func,NULL);
+
     //创建数据接收线程
     recv_state=pthread_create(&recv_thread,NULL,recv_thread_func,NULL);
     if(recv_state != 0)
@@ -48,6 +90,8 @@ int init_c_net(void)
 		recv_thread_start=1;
 		return 0;
     }    
+    //protoocol_process_thread;
+    
 }
 
 int net_start(char * server_ip,int server_port)
@@ -198,15 +242,22 @@ static void * recv_thread_func(void * pv)
 				//此处要做一个缓冲区，因为在测试播放mp3时，发送长数据会出现分包读取现象
 				//即一个包分为两次进行数据读写，出现拆包现象，所以要将读取到的数据添加到缓冲区内
 				//然后单独处理
-				_debug("recv : the len is %d , the data is %s ",recv_len,recv_buf);
-				if( (recv_buf[0]== NET_PROTOCOL_HEADER) && (recv_len > NET_PROTOCOL_MIN_LEN )) //如果为消息头,长度够长
+				//_debug("recv : the len is %d , the data is %s ",recv_len,recv_buf);
+				//有数据，应该向缓冲区中送数据
+				pthread_mutex_lock(&data_mut);
+				//cur_read_len += recv_len;
+				//put_cycle(net_recv_buffer,RECV_BUF_SIZE,recv_len);
+				//net_data.len += recv_len;
+				put_data_to_t(recv_buf,recv_len);
+				pthread_mutex_unlock(&data_mut);
+				/*if( (recv_buf[0]== NET_PROTOCOL_HEADER) && (recv_len > NET_PROTOCOL_MIN_LEN )) //如果为消息头,长度够长
 				{
 					int data_len=(int)((int)(recv_buf[3]<<8)+(int)recv_buf[4]);
 					if((recv_len==(data_len+NET_PROTOCOL_MIN_LEN))&& (recv_buf[recv_len-1] == NET_PROTOCOL_TAIL))
 					{
 						process_protocol(recv_buf,recv_len); //进入到数据处理中
 					}
-				}
+				}*/
 			}
 		}
 	}
@@ -230,6 +281,7 @@ void close_thread(void)
 {
 	recv_thread_start=0;
 	reconnect_thread_start=0;
+	protocol_thread_start=0;
 	if(recv_thread != 0 )
 	{
 		pthread_join(recv_thread,NULL);
@@ -237,5 +289,70 @@ void close_thread(void)
 	if(reconnect_thread != 0)
 	{
 		pthread_join(reconnect_thread,NULL);
+	}
+	if(protoocol_process_thread !=0 )
+	{
+		pthread_join(protoocol_process_thread,NULL);
+	}
+}
+
+void reset_buffer()
+{
+	if(process_count >= NET_PROTOCOL_PROCESS_MAX)
+	{
+		memset(net_data.data,0,net_data.buffer_len_max);
+		net_data.len=0;
+		process_count =0 ;
+	}
+	else
+	{
+_debug("reset the buffer ---------------------");
+		process_count ++;
+	}
+}
+
+void * process_protocol_thread_func(void * pv)
+{
+	while(protocol_thread_start)
+	{
+		usleep(20000); //usleep代表的是微秒级别
+		//if(cur_read_len > NET_PROTOCOL_MIN_LEN)
+		if(net_data.len > NET_PROTOCOL_MIN_LEN)
+		{
+//_debug("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,the header is 0x%x",net_data.data[0]);
+			
+			//cur_read_len += recv_len;
+			if(net_data.data[0] == NET_PROTOCOL_HEADER)
+			{
+//_debug("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+				int data_len=(int)((int)(net_data.data[3]<<8)+(int)(net_data.data[4]));
+				if(net_data.len >= (NET_PROTOCOL_MIN_LEN+data_len))
+				{
+					int temp_len=data_len+NET_PROTOCOL_MIN_LEN;
+					pthread_mutex_lock(&data_mut);
+					memset(data_buf,0,RECV_BUF_SIZE);
+					memcpy(data_buf,net_data.data,temp_len);
+//_debug("process the data_buf ,the len is %d --",temp_len);
+					process_protocol(data_buf,data_len+temp_len);
+
+					net_data.len -= (temp_len);
+					if(net_data.len>0)
+					{
+						memcpy(net_data.data,net_data.data+temp_len,net_data.len);
+					}
+					pthread_mutex_unlock(&data_mut);
+				}
+				else
+				{
+					reset_buffer();
+				}
+			}
+			else
+			{
+				reset_buffer();
+			}
+			//put_cycle(net_recv_buffer,RECV_BUF_SIZE,recv_len);
+			
+		}
 	}
 }

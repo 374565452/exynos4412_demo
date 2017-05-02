@@ -15,6 +15,17 @@
 #include "c_error.h"
 #include "c_utils.h"
 
+typedef struct 
+{
+	int               buffer_len_max;       //×î³¤Êý¾Ý³¤¶È
+	int               len;              //µ±Ç°Êý¾Ý³¤¶È
+	unsigned char     *data;                //Êý¾ÝÖ¸Õë
+}net_data_t;
+
+
+void init_data_t(net_data_t * t);
+void put_data_to_t (unsigned char * data,int len);
+
 int init_c_net(void);
 
 int net_start(char * server_ip,int port);
